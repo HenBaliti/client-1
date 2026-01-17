@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-const SIGNALING_URL = "http://localhost:3001";
+const SIGNALING_URL = "https://server-1arc.onrender.com";
 
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
@@ -337,8 +337,19 @@ export default function App() {
 
       <main className="stage">
         <div className="videoStage">
-          <video ref={remoteVideoRef} autoPlay playsInline className="stageVideo" />
-          <video ref={localVideoRef} autoPlay playsInline muted className="pip" />
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="stageVideo"
+          />
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="pip"
+          />
 
           {!isInCall && (
             <div className="stageOverlay">
@@ -357,7 +368,9 @@ export default function App() {
             <div className="chatHeader">צ׳אט טקסט</div>
             <div className="chatBody">
               {chat.length === 0 ? (
-                <div className="empty">{isInCall ? "תגידו שלום 👋" : "התחל התאמה כדי לצ׳וטט…"}</div>
+                <div className="empty">
+                  {isInCall ? "תגידו שלום 👋" : "התחל התאמה כדי לצ׳וטט…"}
+                </div>
               ) : (
                 chat.map((m) => (
                   <div key={m.id} className={`bubble ${m.mine ? "mine" : ""}`}>
@@ -388,16 +401,28 @@ export default function App() {
         <button className="ctrl danger" onClick={stop} title="סיום">
           ✖
         </button>
-        <button className={`ctrl ${micOn ? "" : "off"}`} onClick={toggleMic} title="מיקרופון">
+        <button
+          className={`ctrl ${micOn ? "" : "off"}`}
+          onClick={toggleMic}
+          title="מיקרופון"
+        >
           🎤
         </button>
         <button className="ctrl" onClick={next} title="הבא">
           ⏭
         </button>
-        <button className={`ctrl ${camOn ? "" : "off"}`} onClick={toggleCam} title="מצלמה">
+        <button
+          className={`ctrl ${camOn ? "" : "off"}`}
+          onClick={toggleCam}
+          title="מצלמה"
+        >
           📷
         </button>
-        <button className="ctrl" onClick={() => setShowChat((v) => !v)} title="צ׳אט">
+        <button
+          className="ctrl"
+          onClick={() => setShowChat((v) => !v)}
+          title="צ׳אט"
+        >
           💬
         </button>
       </div>
