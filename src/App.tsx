@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import {
+  type SubscriptionTier,
+  type UserSubscription,
+  getSkipsRemaining,
+  isPremiumOrHigher,
+} from "./types/subscription";
+import {
+  SubscriptionModal,
+  PremiumBadge,
+  SkipCounter,
+} from "./components/SubscriptionModal";
 
 const SIGNALING_URL = "http://localhost:3001";
 
@@ -46,6 +57,67 @@ export default function App() {
 
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [draft, setDraft] = useState<string>("");
+
+  // Subscription state
+  const [subscription, setSubscription] = useState<UserSubscription>(() => {
+    const saved = localStorage.getItem("cw_subscription");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null,
+        lastSkipReset: new Date(parsed.lastSkipReset),
+      };
+    }
+    return {
+      tier: "free" as SubscriptionTier,
+      expiresAt: null,
+      skipsToday: 0,
+      lastSkipReset: new Date(),
+    };
+  });
+  const [showSubscription, setShowSubscription] = useState(false);
+
+  // Reset daily skips at midnight
+  useEffect(() => {
+    const now = new Date();
+    const lastReset = new Date(subscription.lastSkipReset);
+    if (now.toDateString() !== lastReset.toDateString()) {
+      setSubscription((prev) => ({
+        ...prev,
+        skipsToday: 0,
+        lastSkipReset: now,
+      }));
+    }
+  }, []);
+
+  // Save subscription to localStorage
+  useEffect(() => {
+    localStorage.setItem("cw_subscription", JSON.stringify(subscription));
+  }, [subscription]);
+
+  function handleUpgrade(tier: SubscriptionTier) {
+    // In production, this would go through payment processing
+    setSubscription((prev) => ({
+      ...prev,
+      tier,
+      expiresAt: tier === "free" ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    }));
+    setShowSubscription(false);
+  }
+
+  function consumeSkip(): boolean {
+    const remaining = getSkipsRemaining(subscription);
+    if (remaining <= 0) {
+      setShowSubscription(true);
+      return false;
+    }
+    setSubscription((prev) => ({
+      ...prev,
+      skipsToday: prev.skipsToday + 1,
+    }));
+    return true;
+  }
 
   async function ensureLocalMedia() {
     if (localStreamRef.current) return localStreamRef.current;
@@ -114,17 +186,26 @@ export default function App() {
     setStatus("Searching match...");
     resetConversationUI();
     setQueueInfo(null);
-    socketRef.current?.emit("find");
+    socketRef.current?.emit("find", {
+      subscription: subscription.tier,
+      filters: isPremiumOrHigher(subscription.tier) ? { gender: filterGender, region: filterRegion } : {},
+    });
   }
 
   function next() {
+    // Check skip limit
+    if (!consumeSkip()) return;
+    
     setStatus("Next...");
     cleanupPeerConnection();
     resetConversationUI();
     setQueueInfo(null);
 
     socketRef.current?.emit("next");
-    socketRef.current?.emit("find");
+    socketRef.current?.emit("find", {
+      subscription: subscription.tier,
+      filters: isPremiumOrHigher(subscription.tier) ? { gender: filterGender, region: filterRegion } : {},
+    });
   }
 
   function stop() {
@@ -469,6 +550,19 @@ export default function App() {
             <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
           </svg>
           ChatWave
+          <PremiumBadge tier={subscription.tier} />
+        </div>
+        
+        <div className="header-user">
+          <SkipCounter subscription={subscription} onUpgrade={() => setShowSubscription(true)} />
+          {subscription.tier === 'free' && (
+            <button className="upgrade-btn" onClick={() => setShowSubscription(true)}>
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              Upgrade
+            </button>
+          )}
         </div>
       </header>
 
@@ -742,13 +836,29 @@ export default function App() {
                     <circle cx="12" cy="7" r="4" />
                   </svg>
                   Gender Preference
+                  {!isPremiumOrHigher(subscription.tier) && (
+                    <span className="filter-lock">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                      </svg>
+                      Premium
+                    </span>
+                  )}
                 </div>
                 <div className="filter-options">
                   {["anyone", "male", "female"].map((g) => (
                     <button
                       key={g}
                       className={`filter-chip ${filterGender === g ? "selected" : ""}`}
-                      onClick={() => setFilterGender(g)}
+                      onClick={() => {
+                        if (!isPremiumOrHigher(subscription.tier) && g !== "anyone") {
+                          setShowSubscription(true);
+                          return;
+                        }
+                        setFilterGender(g);
+                      }}
+                      disabled={!isPremiumOrHigher(subscription.tier) && g !== "anyone"}
                     >
                       {g.charAt(0).toUpperCase() + g.slice(1)}
                     </button>
@@ -768,6 +878,15 @@ export default function App() {
                     <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
                   </svg>
                   Region
+                  {!isPremiumOrHigher(subscription.tier) && (
+                    <span className="filter-lock">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                      </svg>
+                      Premium
+                    </span>
+                  )}
                 </div>
                 <div className="filter-options">
                   {[
@@ -780,7 +899,14 @@ export default function App() {
                     <button
                       key={r}
                       className={`filter-chip ${filterRegion === r ? "selected" : ""}`}
-                      onClick={() => setFilterRegion(r)}
+                      onClick={() => {
+                        if (!isPremiumOrHigher(subscription.tier) && r !== "global") {
+                          setShowSubscription(true);
+                          return;
+                        }
+                        setFilterRegion(r);
+                      }}
+                      disabled={!isPremiumOrHigher(subscription.tier) && r !== "global"}
                     >
                       {r
                         .split("-")
@@ -820,6 +946,14 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Subscription Modal */}
+      <SubscriptionModal
+        isOpen={showSubscription}
+        onClose={() => setShowSubscription(false)}
+        currentSubscription={subscription}
+        onUpgrade={handleUpgrade}
+      />
     </div>
   );
 }
