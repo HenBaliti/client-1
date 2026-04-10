@@ -261,178 +261,368 @@ export default function App() {
   }, []);
 
   const isInCall = role !== null && pcRef.current !== null;
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterGender, setFilterGender] = useState<string>('anyone');
+  const [filterRegion, setFilterRegion] = useState<string>('global');
 
-  // Landing screen (RTL Hebrew)
+  // Landing page
   if (!onboardingDone) {
     return (
-      <div className="landing rtl">
-        <header className="landingHeader">
-          <div className="logoTitle">FlirtChat</div>
-          <div className="subtitle">פוגש אנשים חדשים בווידאו צ׳אט</div>
+      <div className="landing">
+        <header className="landing-header">
+          <div className="logo">
+            <div className="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            </div>
+            ChatWave
+          </div>
         </header>
 
-        <section className="features">
-          <div className="featureCard">
-            <div className="featureTitle">וידאו צ׳אט אקראי</div>
-            <div className="featureSub">פוגש אנשים חדשים בווידאו</div>
-          </div>
-          <div className="featureCard">
-            <div className="featureTitle">גלובלי</div>
-            <div className="featureSub">משתמשים מכל העולם</div>
-          </div>
-          <div className="featureCard">
-            <div className="featureTitle">בטוח ומאובטח</div>
-            <div className="featureSub">מערכת דיווחים ומודרציה</div>
-          </div>
-          <div className="featureCard">
-            <div className="featureTitle">פילטרים מתקדמים</div>
-            <div className="featureSub">עם חשבון פרימיום</div>
-          </div>
-        </section>
+        <div className="landing-content">
+          <div className="landing-left">
+            <h1 className="landing-title">
+              Connect with <span className="highlight">Strangers</span> Worldwide
+            </h1>
+            <p className="landing-subtitle">
+              Start random video chats with people from around the globe. Make new friends, have interesting conversations, and explore different cultures— all with complete anonymity.
+            </p>
 
-        <section className="ageGate">
-          <div className="ageWarning">אזהרת גיל +18</div>
-          <label className="ageCheck">
-            <input
-              type="checkbox"
-              checked={ageConfirmed}
-              onChange={(e) => setAgeConfirmed(e.target.checked)}
-            />
-            אני מאשר/ת שאני מעל גיל 18 ומסכימ/ה לתנאי השימוש
-          </label>
-          <button
-            className="ctaStart"
-            disabled={!ageConfirmed}
-            onClick={() => {
-              setOnboardingDone(true);
-              start();
-            }}
-          >
-            התחל צ׳אט עכשיו
-          </button>
-        </section>
+            <div className="feature-grid">
+              <div className="feature-item">
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span className="feature-text">HD Video Chat</span>
+              </div>
+              <div className="feature-item">
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                </svg>
+                <span className="feature-text">Global Network</span>
+              </div>
+              <div className="feature-item">
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span className="feature-text">100% Anonymous</span>
+              </div>
+              <div className="feature-item">
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+                <span className="feature-text">Instant Matching</span>
+              </div>
+            </div>
+          </div>
 
-        <footer className="bottomNav">
-          <div className="navItem">בית</div>
-          <div className="navItem">פרימיום</div>
-          <div className="navItem">פרופיל</div>
-          <div className="navItem">ניהול</div>
+          <div className="landing-right">
+            <div className="start-card">
+              <div className="sparkle-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h2>Start Chatting Now</h2>
+
+              <div className="checkbox-group">
+                <div 
+                  className={`checkbox-item ${ageConfirmed ? 'checked' : ''}`}
+                  onClick={() => setAgeConfirmed(!ageConfirmed)}
+                >
+                  <div className="checkbox-circle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div className="checkbox-content">
+                    <h4>I am 18 years or older</h4>
+                    <p>You must be at least 18 to use this service</p>
+                  </div>
+                </div>
+
+                <div 
+                  className={`checkbox-item ${termsAccepted ? 'checked' : ''}`}
+                  onClick={() => setTermsAccepted(!termsAccepted)}
+                >
+                  <div className="checkbox-circle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div className="checkbox-content">
+                    <h4>I accept the Terms of Service</h4>
+                    <p>Including community guidelines and privacy policy</p>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                className="start-button"
+                disabled={!ageConfirmed || !termsAccepted}
+                onClick={() => {
+                  setOnboardingDone(true);
+                  start();
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Start Video Chat
+              </button>
+
+              <p className="privacy-note">
+                🔒 Your privacy is protected. <a href="#">Learn more</a>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <footer className="landing-footer">
+          © 2024 ChatWave. All rights reserved.
         </footer>
       </div>
     );
   }
 
   return (
-    <div className="app rtl">
-      <header className="topbar">
-        <div className="onlinePill">
-          מחובר <span className="dot" />
-        </div>
-        <div className="statusPill">
-          {queueInfo
-            ? `תור #${queueInfo.position} · ETA ${queueInfo.etaSec}s · המתנה ${queueInfo.waitedSec}s`
-            : status}
+    <div className="chat-app">
+      <header className="chat-header">
+        <button className="back-button" onClick={() => { stop(); setOnboardingDone(false); }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div className="header-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          ChatWave
         </div>
       </header>
 
-      <main className="stage">
-        <div className="videoStage">
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="stageVideo"
-          />
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className="pip"
-          />
+      <div className="chat-main">
+        <div className="videos-container">
+          <div className="video-box">
+            <video ref={remoteVideoRef} autoPlay playsInline />
+            <span className="video-label">Stranger</span>
+            {isInCall && (
+              <div className="connection-badge">
+                <span className="dot"></span>
+                Connected
+              </div>
+            )}
+            {!isInCall && (
+              <div className="video-placeholder">
+                <div className="placeholder-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="10" r="3" />
+                    <path d="M7 20.662V19a2 2 0 012-2h6a2 2 0 012 2v1.662" />
+                  </svg>
+                </div>
+                <span className="placeholder-text">
+                  {queueInfo 
+                    ? `Waiting #${queueInfo.position} · ETA ${queueInfo.etaSec}s`
+                    : status === "Connected" ? "Finding someone..." : status}
+                </span>
+              </div>
+            )}
+          </div>
 
-          {!isInCall && (
-            <div className="stageOverlay">
-              <div className="overlayIcon">📹</div>
-              <div className="overlayText">מחובר!</div>
-            </div>
-          )}
-
-          <div className="placeholderBar">
-            placeholder זהו - כרגע יתווסף WebRTC הבא
+          <div className="video-box">
+            <video ref={localVideoRef} autoPlay playsInline muted />
+            <span className="video-label">You</span>
           </div>
         </div>
 
         {showChat && (
-          <aside className="chatPanel">
-            <div className="chatHeader">צ׳אט טקסט</div>
-            <div className="chatBody">
+          <aside className="chat-panel">
+            <div className="chat-panel-header">
+              <h3>Chat</h3>
+              <p>{isInCall ? "Connected with stranger" : "Waiting for connection..."}</p>
+            </div>
+            
+            <div className="chat-messages">
               {chat.length === 0 ? (
-                <div className="empty">
-                  {isInCall ? "תגידו שלום 👋" : "התחל התאמה כדי לצ׳וטט…"}
+                <div className="chat-empty">
+                  {isInCall 
+                    ? "Say hello! 👋\nStart the conversation." 
+                    : "Connect with someone to start chatting..."}
                 </div>
               ) : (
                 chat.map((m) => (
-                  <div key={m.id} className={`bubble ${m.mine ? "mine" : ""}`}>
+                  <div key={m.id} className={`message ${m.mine ? 'sent' : 'received'}`}>
                     {m.text}
                   </div>
                 ))
               )}
             </div>
-            <div className="chatInput">
+
+            <div className="chat-input-container">
+              <button className="emoji-button">😊</button>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder={isInCall ? "כתבו הודעה…" : "ממתין להתאמה…"}
+                placeholder={isInCall ? "Type a message..." : "Waiting for connection..."}
                 disabled={!isInCall}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendChat();
-                }}
+                onKeyDown={(e) => { if (e.key === "Enter") sendChat(); }}
               />
-              <button className="btn" onClick={sendChat} disabled={!isInCall}>
-                שלח
+              <button className="send-button" onClick={sendChat} disabled={!isInCall}>
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
               </button>
             </div>
           </aside>
         )}
-      </main>
+      </div>
 
-      <div className="controlBar">
-        <button className="ctrl danger" onClick={stop} title="סיום">
-          ✖
+      <div className="control-bar">
+        <button className={`control-btn ${!micOn ? 'off' : ''}`} onClick={toggleMic} title="Microphone">
+          {micOn ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z" />
+              <path d="M19 10v2a7 7 0 01-14 0v-2M12 19v4M8 23h8" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="1" y1="1" x2="23" y2="23" />
+              <path d="M9 9v3a3 3 0 005.12 2.12M15 9.34V4a3 3 0 00-5.94-.6" />
+              <path d="M17 16.95A7 7 0 015 12v-2m14 0v2a7 7 0 01-.11 1.23M12 19v4M8 23h8" />
+            </svg>
+          )}
         </button>
-        <button
-          className={`ctrl ${micOn ? "" : "off"}`}
-          onClick={toggleMic}
-          title="מיקרופון"
-        >
-          🎤
+
+        <button className={`control-btn ${!camOn ? 'off' : ''}`} onClick={toggleCam} title="Camera">
+          {camOn ? (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 7l-7 5 7 5V7z" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m5.66 0H14a2 2 0 012 2v3.34l1 1L23 7v10" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          )}
         </button>
-        <button className="ctrl" onClick={next} title="הבא">
-          ⏭
+
+        <button className="control-btn primary" onClick={next} title="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="5 4 15 12 5 20 5 4" />
+            <line x1="19" y1="5" x2="19" y2="19" />
+          </svg>
+          Next
         </button>
-        <button
-          className={`ctrl ${camOn ? "" : "off"}`}
-          onClick={toggleCam}
-          title="מצלמה"
-        >
-          📷
+
+        <button className="control-btn danger" onClick={stop} title="End">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
-        <button
-          className="ctrl"
-          onClick={() => setShowChat((v) => !v)}
-          title="צ׳אט"
-        >
-          💬
+
+        <button className="control-btn" onClick={() => setShowFilters(true)} title="Filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+        </button>
+
+        <button className="control-btn" onClick={() => setShowChat(!showChat)} title="Chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          </svg>
+        </button>
+
+        <button className="control-btn warning" title="Report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+            <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
         </button>
       </div>
 
-      <footer className="bottomNav">
-        <div className="navItem">בית</div>
-        <div className="navItem">פרימיום</div>
-        <div className="navItem">פרופיל</div>
-        <div className="navItem">ניהול</div>
-      </footer>
+      {/* Filters Modal */}
+      {showFilters && (
+        <div className="modal-overlay" onClick={() => setShowFilters(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                Matching Filters
+              </h2>
+              <button className="modal-close" onClick={() => setShowFilters(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="filter-section">
+                <div className="filter-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  Gender Preference
+                </div>
+                <div className="filter-options">
+                  {['anyone', 'male', 'female'].map((g) => (
+                    <button 
+                      key={g}
+                      className={`filter-chip ${filterGender === g ? 'selected' : ''}`}
+                      onClick={() => setFilterGender(g)}
+                    >
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filter-section">
+                <div className="filter-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                  </svg>
+                  Region
+                </div>
+                <div className="filter-options">
+                  {['global', 'north-america', 'europe', 'asia', 'south-america'].map((r) => (
+                    <button 
+                      key={r}
+                      className={`filter-chip ${filterRegion === r ? 'selected' : ''}`}
+                      onClick={() => setFilterRegion(r)}
+                    >
+                      {r.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="modal-btn secondary" onClick={() => { setFilterGender('anyone'); setFilterRegion('global'); }}>
+                Reset
+              </button>
+              <button className="modal-btn primary" onClick={() => setShowFilters(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
