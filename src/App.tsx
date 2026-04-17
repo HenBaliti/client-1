@@ -11,6 +11,9 @@ import {
   PremiumBadge,
   SkipCounter,
 } from "./components/SubscriptionModal";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthModal } from "./components/AuthModal";
+import { AccountPage } from "./components/AccountPage";
 
 const SIGNALING_URL = "http://localhost:3001";
 
@@ -35,7 +38,18 @@ type ChatMsg = {
   mine: boolean;
 };
 
+// Wrapper component to provide auth context
 export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { user, isAuthenticated } = useAuth();
+  
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -52,6 +66,8 @@ export default function App() {
   const [showChat, setShowChat] = useState<boolean>(true);
   const [micOn, setMicOn] = useState<boolean>(true);
   const [camOn, setCamOn] = useState<boolean>(true);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [showAccountPage, setShowAccountPage] = useState<boolean>(false);
 
   const [queueInfo, setQueueInfo] = useState<QueueInfo | null>(null);
 
@@ -347,6 +363,17 @@ export default function App() {
   const [filterGender, setFilterGender] = useState<string>("anyone");
   const [filterRegion, setFilterRegion] = useState<string>("global");
 
+  // Account page
+  if (showAccountPage && isAuthenticated) {
+    return (
+      <AccountPage
+        subscription={subscription}
+        onUpdateSubscription={handleUpgrade}
+        onBack={() => setShowAccountPage(false)}
+      />
+    );
+  }
+
   // Landing page
   if (!onboardingDone) {
     return (
@@ -364,6 +391,28 @@ export default function App() {
               </svg>
             </div>
             ChatWave
+          </div>
+          
+          <div className="header-actions">
+            {isAuthenticated ? (
+              <button className="user-menu-btn" onClick={() => setShowAccountPage(true)}>
+                <div className="user-avatar">
+                  {user?.photoUrl ? (
+                    <img src={user.photoUrl} alt={user.displayName} />
+                  ) : (
+                    <span>{user?.displayName?.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <span className="user-name">{user?.displayName}</span>
+              </button>
+            ) : (
+              <button className="login-btn" onClick={() => setShowAuthModal(true)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" />
+                </svg>
+                Login
+              </button>
+            )}
           </div>
         </header>
 
@@ -517,6 +566,11 @@ export default function App() {
         <footer className="landing-footer">
           © 2024 ChatWave. All rights reserved.
         </footer>
+
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+        />
       </div>
     );
   }
@@ -561,6 +615,18 @@ export default function App() {
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
               Upgrade
+            </button>
+          )}
+          {isAuthenticated ? (
+            <button className="account-btn" onClick={() => { stop(); setOnboardingDone(false); setShowAccountPage(true); }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
+          ) : (
+            <button className="login-btn-small" onClick={() => setShowAuthModal(true)}>
+              Login
             </button>
           )}
         </div>
@@ -953,6 +1019,12 @@ export default function App() {
         onClose={() => setShowSubscription(false)}
         currentSubscription={subscription}
         onUpgrade={handleUpgrade}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
       />
     </div>
   );
